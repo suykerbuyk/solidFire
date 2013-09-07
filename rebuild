@@ -1,4 +1,2 @@
 #!/bin/sh
-./clean
-./configure
-./make
+./clean && ./configure && ./make
