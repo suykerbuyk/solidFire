@@ -16,60 +16,97 @@
  * ============================================================================
  */
 #include <iostream>
-#include <boost/thread.hpp>
+#include <iomanip>
+#include <fstream>
+#include <cstddef>
 #include <boost/filesystem.hpp>
-#include <boost/date_time.hpp>
+#include <boost/unordered_map.hpp>
+#include "FileFinder.hpp"
 
-namespace fs = boost::filesystem;
-namespace pt = boost::posix_time;
+using namespace jos;
 
-void findFiles(fs::path aDir)
+struct cmp_result_items : public std::binary_function<int, std::string, bool>
 {
-	fs::directory_iterator end_iter;
+	bool  operator() (const int& a, const int& b) const { return (a > b); }
+	bool  operator() (const std::string& a, const std::string& b) const { return (a < b); }
+};
+void test(const boost::filesystem::path& path)
+{
+	//typedef boost::unorderedmap<std::string, int> word_counter_t;
+	typedef std::map<std::string, int> word_counter_t;
+	typedef word_counter_t::iterator word_counter_itr_t;
 
-	typedef std::multimap<std::time_t, fs::path> result_set_t;
-	result_set_t result_set;
+	typedef std::multimap<int, std::string, cmp_result_items> result_t;
+	typedef std::multimap<int, std::string, cmp_result_items>::iterator result_itr_t;
 
-	if ( fs::exists(aDir) && fs::is_directory(aDir))
+	word_counter_t wc;
+	result_t result;
+
+	std::ifstream file;
+	file.open(path.string().c_str());
+	if (file)
 	{
-		for( fs::directory_iterator dir_iter(aDir) ; \
-				dir_iter != end_iter ; \
-				++dir_iter)
+		std::string line;
+		while (std::getline(file, line))
+		{
+			std::string::iterator end=line.end();
+			std::string::iterator itr=line.begin();
+			std::string::iterator word_start=line.end();
+			// This not safe for unicode, but boost::algorithm::to_lower is SLOW!!
+			std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+			while (itr != end)
 			{
-			if (fs::is_regular_file(dir_iter->status()) )
+				if (*itr < 0 || (!std::isalnum(*itr) && *itr != '_'))
+				{
+					if (word_start != end)
+					{
+						++wc[std::string(word_start, itr)];
+					}
+					word_start = end;
+				}
+				else if (word_start == end)
+				{
+					word_start = itr;
+				}
+				++itr;
+			}
+			if (word_start != end)
 			{
-				result_set.insert(\
-						result_set_t::value_type(\
-							fs::last_write_time(dir_iter->path()), \
-							dir_iter->path())\
-						);
-				std::cout << dir_iter->path() << std::endl;
+				++wc[std::string(word_start, itr)];
 			}
 		}
 	}
-}
-
-void workerFunc()
-{
-	pt::seconds workTime(3);
-	std::cout << "Worker: running" << std::endl;
-
-	// Pretend to do something useful...
-	boost::this_thread::sleep(workTime);
-	std::cout << "Worker: finished" << std::endl;
+	word_counter_itr_t wc_itr = wc.begin();
+	while (wc_itr != wc.end())
+	{
+		result.insert(std::make_pair(wc_itr->second, wc_itr->first));
+		wc_itr++;
+	}
+	result_itr_t result_itr = result.begin();
+	while (result_itr != result.end())
+	{
+	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << result_itr->first << ": " << result_itr->second << std::endl;
+		result_itr++;
+	}
 }
 
 int main(int argc, char* argv[])
 {
-	//findFiles(fs::path("/usr/home/johns"));
-	findFiles(fs::path("."));
-	std::cout << "main: startup" << std::endl;
-	boost::thread workerThread(workerFunc);
+	boost::filesystem::path path("txt/test.txt");
+	//boost::filesystem::path path("txt/life.on.the.mississippi.txt");
+	test(path);
 
-	std::cout << "main: waiting for thread" << std::endl;
-	workerThread.join();
-
-	std::cout << "main: done" << std::endl;
+//	path_list_cwd_t paths;
+//	FileFinder finder;
+//	finder.Find(boost::filesystem::path("."), paths, ".txt");
+//
+//	path_list_cwd_iterator_t path_end=paths.end();
+//	path_list_cwd_iterator_t path_itr=paths.begin();
+//	while (path_itr != path_end)
+//	{
+//		std::cout << boost::filesystem::canonical(*path_itr) << std::endl;
+//		++path_itr;
+//	}
 	return 0;
 }
 
