@@ -21,6 +21,7 @@
 #include <fstream>
 #include <cstddef>
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include "WordCount.hpp"
 #include "ThreadCounter.hpp"
 
@@ -31,17 +32,52 @@ typedef std::map<std::string, int> file_word_counter_t;
 typedef std::map<std::string, int>::iterator file_word_counter_itr_t;
 
 
-class WordCountImpl
+class WordCount::Impl
 {
 	public:
-		WordCountImpl(file_word_counter_t& tally) :file_wc(tally) {};
+		Impl(void) {}
+		virtual ~Impl() {}
+		void AddFileContents(const boost::filesystem::path& path);
+		void WaitForCompletion(void)
+		{
+			m_threads.join_all();
+		}
+		void GetTotals(word_counts_t& ret);
 	private:
-		boost::mutex word_counter mutex;
-		file_word_counter_t& file_wc;
+		void countFileWords(const boost::filesystem::path& path);
+		boost::mutex         m_word_counter_mutex;
+		file_word_counter_t  m_tally;
+		boost::thread_group  m_threads;
+		ThreadCounter        m_thread_counter;
 };
 
+void WordCount::Impl::GetTotals(word_counts_t& ret)
+{
+	ret.clear();
+	WaitForCompletion();
+	boost::mutex::scoped_lock lock (m_word_counter_mutex);
+	file_word_counter_itr_t m_tally_itr = m_tally.begin();
+	/*  transform from string ordered map to a map sorted by count */
+	while (m_tally_itr != m_tally.end())
+	{
+		ret.insert(std::make_pair(m_tally_itr->second, m_tally_itr->first));
+		++m_tally_itr;
+	}
 
-std::size_t CountFileWords(const boost::filesystem::path& path, file_word_counter_t& file_wc)
+}
+void WordCount::Impl::AddFileContents(const boost::filesystem::path& path)
+{
+		if (m_thread_counter.TryInc())
+		{
+			m_threads.create_thread(
+					boost::bind(&WordCount::Impl::countFileWords, this, path));
+		}
+		else 
+		{
+			countFileWords(path);
+		}
+}
+void WordCount::Impl::countFileWords(const boost::filesystem::path& path)
 {
 	std::ifstream word_file;
 	std::locale locality("C");
@@ -49,6 +85,8 @@ std::size_t CountFileWords(const boost::filesystem::path& path, file_word_counte
 	word_file.open(path.string().c_str());
 	if (word_file)
 	{
+
+		file_word_counter_t file_wc;
 		std::string line;
 		while (std::getline(word_file, line))
 		{
@@ -79,85 +117,49 @@ std::size_t CountFileWords(const boost::filesystem::path& path, file_word_counte
 			}
 		}
 		word_file.close();
+		// Update the totals so far....
+		boost::mutex::scoped_lock lock (m_word_counter_mutex);
+		file_word_counter_itr_t file_wc_itr = file_wc.begin();
+		while (file_wc_itr != file_wc.end())
+		{
+			m_tally[file_wc_itr->first] += file_wc_itr->second;
+			++file_wc_itr;
+		}
 	}
 	else
 	{
 		std::cerr << "Failed to read: " << path << std::endl;
 	}
-	return file_wc.size();
 }
 
 
 WordCount::WordCount()
 {
+	p_impl = new WordCount::Impl;
 
 }
 WordCount::~WordCount()
 {
-
+	delete p_impl;
 }
-void WordCount::Count(const file_path_list_t& paths, word_counts_t& ret)
+void WordCount::CountWords(const file_path_list_t& paths)
 {
-	typedef std::vector<file_word_counter_t> word_count_lists_t;
-	typedef std::vector<file_word_counter_t>::iterator word_count_lists_itr_t;
-	typedef std::vector<file_word_counter_t>::const_iterator word_count_lists_const_itr_t;
-
+	
 	file_path_list_const_itr_t fp_itr = paths.begin();
 	file_path_list_const_itr_t fp_end = paths.end();
-	word_count_lists_t wc_lists;
-
-	boost::thread_group threads;
-	ThreadCounter thread_counter;
-
 
 	while(fp_itr != fp_end)
 	{
-		file_word_counter_t file_wc;
-		wc_lists.push_back(file_wc);
-		if (thread_counter.TryInc())
-		{
-			threads.create_thread(
-					boost::bind(CountFileWords, *fp_itr, boost::ref(wc_lists.back())));
-		}
-		else 
-		{
-			CountFileWords(*fp_itr, wc_lists.back());
-		}
+		p_impl->AddFileContents(*fp_itr);
 		++fp_itr;
 	}
-	threads.join_all();
-	
-	file_word_counter_t wc_totals;
-
-	for (word_count_lists_itr_t wcl_itr = wc_lists.begin(); 
-			wcl_itr < wc_lists.end(); 
-			wcl_itr++)
-	{
-		for (file_word_counter_itr_t fwc_itr = wcl_itr->begin();
-				fwc_itr != wcl_itr->end();
-				++fwc_itr)
-		{
-			wc_totals[fwc_itr->first] += fwc_itr->second;
-		}
-	}	
-	file_word_counter_itr_t wc_totals_itr = wc_totals.begin();
-	while (wc_totals_itr != wc_totals.end())
-	{
-		ret.insert(std::make_pair(wc_totals_itr->second, wc_totals_itr->first));
-		++wc_totals_itr;
-	}
 }
-void WordCount::Count(const boost::filesystem::path& path, word_counts_t& ret)
+void WordCount::CountWords(const boost::filesystem::path& path)
 {
-	file_word_counter_t file_wc;
 
-	CountFileWords(path, file_wc);
-	
-	file_word_counter_itr_t file_wc_itr = file_wc.begin();
-	while (file_wc_itr != file_wc.end())
-	{
-		ret.insert(std::make_pair(file_wc_itr->second, file_wc_itr->first));
-		file_wc_itr++;
-	}
+	p_impl->AddFileContents(path);
 }
-
+void WordCount::GetTotals(word_counts_t& word_counts)
+{
+	p_impl->GetTotals(word_counts);
+}

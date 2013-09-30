@@ -33,13 +33,16 @@ namespace jos
 		delete p_thread_counter;
 	}
 	
-	void FileFinder::Find(fs::path aDir, path_list_cwd_t& cwd_paths, std::string file_extension)
+	void FileFinder::Find(fs::path aDir, file_path_list_t& cwd_paths, std::string file_extension)
 	{
 		m_ext = file_extension;
 		findFiles(aDir, cwd_paths, false);
 	}
-	void FileFinder::findFiles(fs::path aDir, path_list_cwd_t& cwd_paths, bool as_thread)
+	void FileFinder::findFiles(fs::path aDir, file_path_list_t& cwd_paths, bool as_thread)
 	{
+		typedef std::list<file_path_list_t> child_paths_t;
+		typedef std::list<file_path_list_t>::iterator child_paths_iterator_t;
+
 		child_paths_t child_paths;
 		if ( fs::exists(aDir) && fs::is_directory(aDir))
 		{
@@ -56,7 +59,7 @@ namespace jos
 				} 
 				else if (fs::is_directory(dir_iter->status()))
 				{
-					path_list_cwd_t child;
+					file_path_list_t child;
 					child_paths.push_back(child);
 
 					if (p_thread_counter->TryInc())
@@ -78,14 +81,13 @@ namespace jos
 				}
 			}
 			threads.join_all();
-			cwd_paths.sort();
+			//cwd_paths.sort();
 			if (child_paths.size())
 			{
 				child_paths_iterator_t child_end = child_paths.end();
 				child_paths_iterator_t child_itr = child_paths.begin();
 				while(child_itr != child_end)
 				{
-					child_itr->sort();
 					cwd_paths.merge(*child_itr);
 					++child_itr;
 				}

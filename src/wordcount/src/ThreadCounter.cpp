@@ -40,7 +40,7 @@ size_t ThreadCounter::Dec(void)
 {
 	boost::mutex::scoped_lock lock( *p_mutex );
 	m_thread_count--;
-	std::cout << "Thread Dec Count: " << m_thread_count << std::endl;
+	//std::cout << "Thread Dec Count: " << m_thread_count << std::endl;
 	return (m_thread_count);
 }
 size_t ThreadCounter::Inc(void)
@@ -72,7 +72,7 @@ size_t ThreadCounter::Inc(void)
 	}
 	boost::mutex::scoped_lock lock( *p_mutex );
 	m_thread_count++;
-	std::cout << "Thread Inc Count: " << m_thread_count << std::endl;
+	//std::cout << "Thread Inc Count: " << m_thread_count << std::endl;
 	return (m_thread_count);
 }
 size_t ThreadCounter::TryInc(void)
@@ -81,12 +81,12 @@ size_t ThreadCounter::TryInc(void)
 	if (m_thread_count < m_max_threads)
 	{
 		m_thread_count++;
-		std::cout << "Thread Try Count: " << m_thread_count << std::endl;
+		//std::cout << "Thread Try Count: " << m_thread_count << std::endl;
 		return (m_thread_count);
 	}
 	else
 	{
-		std::cout << "Thread NOP Count: " << m_thread_count << std::endl;
+		//std::cout << "Thread NOP Count: " << m_thread_count << std::endl;
 		return (0);
 	}
 }

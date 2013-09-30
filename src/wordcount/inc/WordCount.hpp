@@ -18,12 +18,12 @@
 #ifndef JOS_WORDCOUNT_GUARD
 #define JOS_WORDCOUNT_GUARD
 
-#include <iostream>
-#include <iomanip>
+//#include <iostream>
+//#include <iomanip>
 #include <fstream>
 #include <cstddef>
 #include <map>
-#include <boost/unordered_map.hpp>
+//#include <boost/unordered_map.hpp>
 #include "FileFinder.hpp"
 
 namespace jos
@@ -40,12 +40,16 @@ namespace jos
 	class WordCount
 	{
 		public:
-		WordCount();
-		virtual ~WordCount();
-		
-		void Count(const boost::filesystem::path& path, word_counts_t& ret);
-		void Count(const file_path_list_t& paths, word_counts_t& ret);
+			class Impl;
+			WordCount();
+			virtual ~WordCount();
+			
+			void CountWords(const boost::filesystem::path& path);
+			void CountWords(const file_path_list_t& paths);
+			void GetTotals(word_counts_t& word_counts);
 		private:
+			Impl* p_impl;
+
 	};
 };
 #endif // JOS_WORDCOUNT_GUARD

@@ -15,6 +15,9 @@
  *
  * =====================================================================================
  */
+#ifndef JOS_FILE_FINDER_GUARD
+#define JOS_FILE_FINDER_GUARD
+
 #include <boost/filesystem.hpp>
 
 namespace jos
@@ -22,13 +25,10 @@ namespace jos
 	class ThreadCounter;
 
 	namespace fs = boost::filesystem;
-
-	typedef std::list<fs::path> path_list_cwd_t;
-	typedef std::list<fs::path>::iterator path_list_cwd_iterator_t;
+	typedef std::list<fs::path> file_path_list_t;
+	typedef std::list<fs::path>::iterator file_path_list_itr_t;
+	typedef std::list<fs::path>::const_iterator file_path_list_const_itr_t;
 	
-	typedef std::list<path_list_cwd_t> child_paths_t;
-	typedef std::list<path_list_cwd_t>::iterator child_paths_iterator_t;
-
 	/**
 	 * @brief - Simple class to recursively find all files in a path.
 	 */
@@ -49,12 +49,13 @@ namespace jos
 			 * @param aDir - Directory to start recursively searching from.
 			 * @param cwd_paths - std::list of boost::filesystem::paths found.
 			 */
-			void Find(fs::path aDir, jos::path_list_cwd_t& cwd_paths, std::string file_extension="*");
+			void Find(fs::path aDir, jos::file_path_list_t& cwd_paths, std::string file_extension="*");
 		private:
 			bool fileExtMatch(const fs::path test);
-			void findFiles(fs::path aDir, jos::path_list_cwd_t& cwd_paths, bool as_thread);
+			void findFiles(fs::path aDir, jos::file_path_list_t& cwd_paths, bool as_thread);
 			ThreadCounter* p_thread_counter;
 			std::string    m_ext;
 	};// class FileFinder
 }; //namespace jos
+#endif //JOS_FILE_FINDER_GUARD
 

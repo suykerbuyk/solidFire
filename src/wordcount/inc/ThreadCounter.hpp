@@ -19,6 +19,8 @@
  *
  * =====================================================================================
  */
+#ifndef JOS_THREAD_COUNTER_GUARD
+#define JOS_THREAD_COUNTER_GUARD
 
 #ifndef MAX_CONCURRENT_THREADS
 #	define MAX_CONCURRENT_THREADS 128
@@ -84,4 +86,6 @@ namespace jos
 	};
 	
 };
+
+#endif // JOS_THREAD_COUNTER_GUARD
 

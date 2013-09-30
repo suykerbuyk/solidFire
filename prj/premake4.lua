@@ -27,12 +27,12 @@ solution "solidFire"
       targetdir("../bin/release")
 
 
-   project "thread"
+   project "wordcount"
       kind "ConsoleApp"
       language "C++"
-      files { "../src/thread/**.hpp", "../src/thread/**.cpp" }
+      files { "../src/wordcount/**.hpp", "../src/wordcount/**.cpp" }
       libdirs { os.findlib("boost_thread") }
-      includedirs {"/usr/local/include", "/usr/include", "../src/thread/inc" }
+      includedirs {"/usr/local/include", "/usr/include", "../src/wordcount/inc" }
       links { "boost_thread", "boost_program_options", "boost_filesystem"}
       location "../bld" 
 
