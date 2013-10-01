@@ -32,30 +32,6 @@ int main(int argc, char* argv[])
 	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << wc_itr->first << ": " << wc_itr->second << std::endl;
 		++wc_itr;
 	}
-
-//	jos::word_counts_t word_counts;
-//	jos::file_path_list_t paths;
-//	
-//	jos::WordCount wc;
-//	jos::FileFinder finder;
-//
-//	finder.Find(boost::filesystem::path("."), paths, ".txt");
-//
-//	jos::file_path_list_itr_t path_end=paths.end();
-//	jos::file_path_list_itr_t path_itr=paths.begin();
-//	while (path_itr != path_end)
-//	{
-//		std::cout << boost::filesystem::canonical(*path_itr) << std::endl;
-//		++path_itr;
-//	}
-//	wc.CountWords(paths);
-//	wc.GetTotals(word_counts);
-//	jos::word_counts_itr_t ret_itr = word_counts.begin();
-//	while (ret_itr != word_counts.end())
-//	{
-//	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << ret_itr->first << ": " << ret_itr->second << std::endl;
-//		ret_itr++;
-//	}
 	return 0;
 }
 

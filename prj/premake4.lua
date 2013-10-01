@@ -36,17 +36,4 @@ solution "solidFire"
       links { "boost_thread", "boost_program_options", "boost_filesystem"}
       location "../bld" 
 
-   project "path_info"
-      kind "ConsoleApp"
-      language "C++"
-      files { "../src/path_info/**.h", "../src/path_info/**.cpp" }
-      links { "boost_program_options", "boost_filesystem"}
-      location "../bld" 
- 
-   project "asio_timer"
-      kind "ConsoleApp"
-      language "C++"
-      files { "../src/asio_timer/**.h", "../src/asio_timer/**.cpp" }
-      links { "boost_thread"}
-      location "../bld" 
  
