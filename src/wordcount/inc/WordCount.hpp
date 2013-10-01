@@ -18,35 +18,22 @@
 #ifndef JOS_WORDCOUNT_GUARD
 #define JOS_WORDCOUNT_GUARD
 
-//#include <iostream>
-//#include <iomanip>
-#include <fstream>
-#include <cstddef>
-#include <map>
-//#include <boost/unordered_map.hpp>
-#include "FileFinder.hpp"
+#include "jos_types.hpp"
 
 namespace jos
 {
-	struct word_count_comparator : public std::binary_function<int, std::string, bool>
-	{
-		bool  operator() (const int& a, const int& b) const { return (a > b); }
-		bool  operator() (const std::string& a, const std::string& b) const { return (a < b); }
-	};
-	typedef std::multimap<int, std::string, word_count_comparator> word_counts_t;
-	typedef std::multimap<int, std::string, word_count_comparator>::iterator word_counts_itr_t;
-	typedef std::multimap<int, std::string, word_count_comparator>::const_iterator word_counts_const_itr_t;
 
 	class WordCount
 	{
 		public:
-			class Impl;
 			WordCount();
 			virtual ~WordCount();
 			
 			void CountWords(const boost::filesystem::path& path);
 			void CountWords(const file_path_list_t& paths);
 			void GetTotals(word_counts_t& word_counts);
+		protected:
+			class Impl;
 		private:
 			Impl* p_impl;
 

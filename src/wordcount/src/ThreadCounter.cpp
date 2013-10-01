@@ -21,24 +21,22 @@
 
 using namespace jos;
 
-ThreadCounter::ThreadCounter(size_t max_theads) : 
-	m_max_threads(max_theads), 
-	m_thread_count(0)
-{
-	p_mutex = new boost::mutex();
-}
-ThreadCounter::~ThreadCounter()
-{
-	delete p_mutex;
-}
+#ifndef MAX_CONCURRENT_THREADS
+#	define MAX_CONCURRENT_THREADS 64
+#endif 
+
+size_t ThreadCounter::m_max_threads = MAX_CONCURRENT_THREADS;
+size_t ThreadCounter::m_thread_count = 0;
+boost::mutex thread_count_mutex;
+
 size_t ThreadCounter::Get(void)
 {
-	boost::mutex::scoped_lock lock( *p_mutex );
+	boost::mutex::scoped_lock lock( thread_count_mutex );
 	return (m_thread_count);
 }
 size_t ThreadCounter::Dec(void)
 {
-	boost::mutex::scoped_lock lock( *p_mutex );
+	boost::mutex::scoped_lock lock( thread_count_mutex );
 	m_thread_count--;
 	//std::cout << "Thread Dec Count: " << m_thread_count << std::endl;
 	return (m_thread_count);
@@ -50,7 +48,7 @@ size_t ThreadCounter::Inc(void)
 	const int ms_max_wait_time = 1000;
 	while ( 1 )
 	{
-		boost::mutex::scoped_lock lock( *p_mutex );
+		boost::mutex::scoped_lock lock( thread_count_mutex );
 		if ( m_thread_count >= m_max_threads )
 		{
 			ms_time_waited += ms_to_wait;
@@ -70,14 +68,14 @@ size_t ThreadCounter::Inc(void)
 			break;
 		}
 	}
-	boost::mutex::scoped_lock lock( *p_mutex );
+	boost::mutex::scoped_lock lock( thread_count_mutex );
 	m_thread_count++;
 	//std::cout << "Thread Inc Count: " << m_thread_count << std::endl;
 	return (m_thread_count);
 }
 size_t ThreadCounter::TryInc(void)
 {
-	boost::mutex::scoped_lock lock( *p_mutex );
+	boost::mutex::scoped_lock lock( thread_count_mutex );
 	if (m_thread_count < m_max_threads)
 	{
 		m_thread_count++;
@@ -90,8 +88,12 @@ size_t ThreadCounter::TryInc(void)
 		return (0);
 	}
 }
-void ThreadCounter::SetMax(size_t max_threads)
+void ThreadCounter::SetMaxThreads(size_t max_threads)
 {
-	boost::mutex::scoped_lock lock( *p_mutex );
+	boost::mutex::scoped_lock lock( thread_count_mutex );
 	m_max_threads = max_threads;
+}
+size_t ThreadCounter::GetMaxThreads(void)
+{
+	return(m_max_threads);
 }

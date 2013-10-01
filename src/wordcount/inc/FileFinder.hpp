@@ -18,17 +18,12 @@
 #ifndef JOS_FILE_FINDER_GUARD
 #define JOS_FILE_FINDER_GUARD
 
-#include <boost/filesystem.hpp>
+#include "jos_types.hpp"
 
 namespace jos
 {
 	class ThreadCounter;
 
-	namespace fs = boost::filesystem;
-	typedef std::list<fs::path> file_path_list_t;
-	typedef std::list<fs::path>::iterator file_path_list_itr_t;
-	typedef std::list<fs::path>::const_iterator file_path_list_const_itr_t;
-	
 	/**
 	 * @brief - Simple class to recursively find all files in a path.
 	 */

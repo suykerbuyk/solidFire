@@ -16,10 +16,9 @@
  * =====================================================================================
  */
 
-#include <iostream>
-#include <iomanip>
+//#include <iostream>
+//#include <iomanip>
 #include <fstream>
-#include <cstddef>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include "WordCount.hpp"
@@ -27,6 +26,10 @@
 
 using namespace jos;
 
+#ifndef MAX_CONCURRENT_THREADS
+#	define MAX_CONCURRENT_THREADS 128
+#endif 
+//
 //typedef boost::unorderedmap<std::string, int> file_word_counter_t;
 typedef std::map<std::string, int> file_word_counter_t;
 typedef std::map<std::string, int>::iterator file_word_counter_itr_t;
@@ -44,7 +47,7 @@ class WordCount::Impl
 		}
 		void GetTotals(word_counts_t& ret);
 	private:
-		void countFileWords(const boost::filesystem::path& path);
+		void countFileWords(const boost::filesystem::path& path, bool asThread);
 		boost::mutex         m_word_counter_mutex;
 		file_word_counter_t  m_tally;
 		boost::thread_group  m_threads;
@@ -70,14 +73,14 @@ void WordCount::Impl::AddFileContents(const boost::filesystem::path& path)
 		if (m_thread_counter.TryInc())
 		{
 			m_threads.create_thread(
-					boost::bind(&WordCount::Impl::countFileWords, this, path));
+					boost::bind(&WordCount::Impl::countFileWords, this, path, true));
 		}
 		else 
 		{
-			countFileWords(path);
+			countFileWords(path, false);
 		}
 }
-void WordCount::Impl::countFileWords(const boost::filesystem::path& path)
+void WordCount::Impl::countFileWords(const boost::filesystem::path& path, bool asThread)
 {
 	std::ifstream word_file;
 	std::locale locality("C");
@@ -129,6 +132,10 @@ void WordCount::Impl::countFileWords(const boost::filesystem::path& path)
 	else
 	{
 		std::cerr << "Failed to read: " << path << std::endl;
+	}
+	if (asThread)
+	{
+		m_thread_counter.Dec();
 	}
 }
 

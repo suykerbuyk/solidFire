@@ -18,52 +18,44 @@
 
 #include <iostream>
 #include <iomanip>
-#include <fstream>
-#include <cstddef>
-#include "WordCount.hpp"
-#include "FileFinder.hpp"
-
-
-class FileWordCounter
-{
-	public:
-		FileWordCounter() : m_ext(".txt"), m_path("."), m_tcnt(20) {}
-		~FileWordCounter();
-		void SetFileExtension(const std::string& ext)  {m_ext = ext;}
-		void SetRootPath     (const std::string& path) {m_path = path;}
-		void SetMaxThreads   (const size_t& max_count) {m_tcnt = max_count;}
-	private:
-		std::string m_ext;
-		std::string m_path;
-		size_t      m_tcnt;
-
-};
+#include "FileWordCounter.hpp"
 
 int main(int argc, char* argv[])
 {
-	jos::word_counts_t word_counts;
-	jos::file_path_list_t paths;
-	
-	jos::WordCount wc;
-	jos::FileFinder finder;
+	jos::FileWordCounter fwc;
+	jos::word_counts_t wc;
+	fwc.GetWordCounts(wc);
 
-	finder.Find(boost::filesystem::path("."), paths, ".txt");
+	jos::word_counts_itr_t wc_itr = wc.begin();
+	while(wc_itr != wc.end())
+	{
+	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << wc_itr->first << ": " << wc_itr->second << std::endl;
+		++wc_itr;
+	}
 
-	jos::file_path_list_itr_t path_end=paths.end();
-	jos::file_path_list_itr_t path_itr=paths.begin();
-	while (path_itr != path_end)
-	{
-		std::cout << boost::filesystem::canonical(*path_itr) << std::endl;
-		++path_itr;
-	}
-	wc.CountWords(paths);
-	wc.GetTotals(word_counts);
-	jos::word_counts_itr_t ret_itr = word_counts.begin();
-	while (ret_itr != word_counts.end())
-	{
-	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << ret_itr->first << ": " << ret_itr->second << std::endl;
-		ret_itr++;
-	}
+//	jos::word_counts_t word_counts;
+//	jos::file_path_list_t paths;
+//	
+//	jos::WordCount wc;
+//	jos::FileFinder finder;
+//
+//	finder.Find(boost::filesystem::path("."), paths, ".txt");
+//
+//	jos::file_path_list_itr_t path_end=paths.end();
+//	jos::file_path_list_itr_t path_itr=paths.begin();
+//	while (path_itr != path_end)
+//	{
+//		std::cout << boost::filesystem::canonical(*path_itr) << std::endl;
+//		++path_itr;
+//	}
+//	wc.CountWords(paths);
+//	wc.GetTotals(word_counts);
+//	jos::word_counts_itr_t ret_itr = word_counts.begin();
+//	while (ret_itr != word_counts.end())
+//	{
+//	    std::cout << std::setw(7) << std::setiosflags(std::ios::right) << ret_itr->first << ": " << ret_itr->second << std::endl;
+//		ret_itr++;
+//	}
 	return 0;
 }
 

@@ -22,33 +22,12 @@
 #ifndef JOS_THREAD_COUNTER_GUARD
 #define JOS_THREAD_COUNTER_GUARD
 
-#ifndef MAX_CONCURRENT_THREADS
-#	define MAX_CONCURRENT_THREADS 128
-#endif 
-
-class boost::mutex;
 
 namespace jos
 {
 	class ThreadCounter
 	{
 		public:
-			/**
-			 * @brief Contructor
-			 *
-			 * @param max_theads - Maximum number of threads to allow.
-			 */
-			ThreadCounter(size_t max_theads = MAX_CONCURRENT_THREADS);
-			/**
-			 * @brief Destructor
-			 */
-			virtual ~ThreadCounter(void);
-			/**
-			 * @brief Returns the active thread count.
-			 * May block execution if another thread is accessing thread count.
-			 *
-			 * @return - Number of active threads.
-			 */
 			size_t Get   (void);
 			/**
 			 * @brief - Decrements the number of active threads.
@@ -78,11 +57,15 @@ namespace jos
 			 *
 			 * @param max_threads - Maximum thread count.
 			 */
-			void SetMax(size_t max_threads);
+			void   SetMaxThreads(size_t max_threads);
+			/**
+			 * @brief Retrieves the maximum number of allowable threads.
+			 *
+			 */
+			size_t GetMaxThreads(void);
 		private:
-			size_t        m_max_threads;
-			size_t        m_thread_count;
-			boost::mutex* p_mutex;
+			static size_t        m_max_threads;
+			static size_t        m_thread_count;
 	};
 	
 };
